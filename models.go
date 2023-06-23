@@ -51,3 +51,26 @@ func ListModels() ([]Model, error) {
 	}
 	return result["models"], nil
 }
+
+func GetModel(name string) (Model, error) {
+	err := LoadEnvFromFile(".env")
+	apiKey := os.Getenv("PALM_API_KEY")
+	if err != nil {
+		return Model{}, fmt.Errorf("error loading .env file: %w", err)
+	}
+	endpoint := fmt.Sprintf("%s/models/%s?key=%s", API_BASE_URL, name, apiKey)
+	req, err := http.NewRequest("GET", endpoint, nil)
+	if err != nil {
+		return Model{}, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Add("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	var result Model
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return Model{}, fmt.Errorf("error decoding response: %w", err)
+	}
+	return result, nil
+}
