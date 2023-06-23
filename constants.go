@@ -1,0 +1,4 @@
+package main
+
+const API_BASE_URL string = "https://generativelanguage.googleapis.com/v1beta2"
+
