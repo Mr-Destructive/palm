@@ -1,4 +1,4 @@
-package main
+package palm
 
 import (
 	"encoding/json"

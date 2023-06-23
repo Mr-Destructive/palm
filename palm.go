@@ -1,4 +1,4 @@
-package main
+package palm
 
 import (
 	"bufio"
@@ -56,18 +56,25 @@ func main() {
 				},
 			},
 		}
-		m, err := GenerateMessage(message, map[string]string{"model": "chat-bison-001"})
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(m)
-		model, err := GetModel(modelName)
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(model)
-		ListModels()
 	*/
+	message := MessagePrompt{
+		Messages: []Message{
+			Message{
+				Content: "what is the meaning of life",
+			},
+		},
+	}
+	m, err := GenerateMessage(message, map[string]string{"model": "chat-bison-001"})
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(m)
+	model, err := GetModel(modelName)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(model)
+	ListModels()
 	text, err := GenerateText(modelName, PromptConfig{Prompt: TextPrompt{"what is the meaning of life"}})
 	if err != nil {
 		fmt.Println(err)

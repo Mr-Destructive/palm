@@ -1,4 +1,4 @@
-package main
+package palm
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 )
 
 type Response struct {
@@ -153,7 +152,6 @@ func GenerateMessage(messages MessagePrompt, params map[string]string) (string, 
 	if err != nil {
 		return "", err
 	}
-	jsonMessagePrompt = []byte(strings.ReplaceAll(string(jsonMessagePrompt), "null", "\"\""))
 	payload := `{
 	    "prompt": ` + string(jsonMessagePrompt) + `,
         "temperature": 0.2,
