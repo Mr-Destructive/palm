@@ -148,5 +148,5 @@ func (t HarmBlockThreshold) String() string {
 }
 
 type Embedding struct {
-    Value float64 `json:"value"`
+	Value []float64 `json:"value"`
 }

@@ -7,11 +7,6 @@ import (
 	"net/http"
 )
 
-type Response struct {
-	Candidates []struct {
-		Output string `json:"output"`
-	} `json:"candidates"`
-}
 
 type ResponseText struct {
 	Candidates     []TextCompletion `json:"candidates"`
@@ -56,15 +51,18 @@ func GenerateText(model string, params PromptConfig) (string, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		return "", err
 	}
 
-	var result Response
+	var result ResponseText
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
 		return "", err
 	}
-	return result.Candidates[0].Output, nil
+	if len(result.Candidates) > 0 {
+		return result.Candidates[0].Output, nil
+	}
+	return "", fmt.Errorf("error fetching response data")
 }
 
 type ResponseMessage struct {
@@ -106,11 +104,14 @@ func GenerateMessage(messages MessagePrompt, params map[string]string) (string, 
 	if err != nil {
 		return "", err
 	}
-	return result.Candidates[0].Content, nil
+	if len(result.Candidates) > 0 {
+		return result.Candidates[0].Content, nil
+	}
+	return "", fmt.Errorf("error fetching response candidates")
 }
 
 type ResponseEmbed struct {
-	Embedding []Embedding `json:"embedding"`
+	Embedding Embedding `json:"embedding"`
 }
 
 func EmbedText(text string) (ResponseEmbed, error) {
@@ -118,12 +119,15 @@ func EmbedText(text string) (ResponseEmbed, error) {
 	if err != nil {
 		return ResponseEmbed{}, err
 	}
-	endpoint := fmt.Sprintf("%s/models/%s:embedText?key=%s", API_BASE_URL, "text-bison-001", apiKey)
+	endpoint := fmt.Sprintf("%s/%s:embedText?key=%s", API_BASE_URL, "models/embedding-gecko-001", apiKey)
 	jsonMessagePrompt, err := json.Marshal(text)
 	if err != nil {
 		return ResponseEmbed{}, err
 	}
-	jsonPayload := []byte(jsonMessagePrompt)
+	payload := `{
+        "text": ` + string(jsonMessagePrompt) + `
+    }`
+	jsonPayload := []byte(payload)
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		return ResponseEmbed{}, err
