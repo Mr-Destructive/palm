@@ -14,76 +14,10 @@ type Response struct {
 	} `json:"candidates"`
 }
 
-type TextPrompt struct {
-	Text string `json:"text"`
-}
-
-type SafetySetting struct {
-	StopSequence string `json:"stopSequence"`
-}
-
-type PromptConfig struct {
-	Prompt          TextPrompt      `json:"prompt"`
-	SafetySettings  []SafetySetting `json:"safetySettings"`
-	StopSequences   []string        `json:"stopSequences"`
-	Temperature     float64         `json:"temperature"`
-	CandidateCount  int             `json:"candidateCount"`
-	MaxOutputTokens int             `json:"maxOutputTokens"`
-	TopP            float64         `json:"topP"`
-	TopK            int             `json:"topK"`
-}
-
-type Message struct {
-	Author           string           `json:"author"`
-	Content          string           `json:"content"`
-	CitationMetadata CitationMetadata `json:"citationMetadata,omitempty"`
-}
-
-type MessagePrompt struct {
-	Context  string    `json:"context"`
-	Examples []Example `json:"examples,omitempty"`
-	Messages []Message `json:"messages"`
-}
-
-type Example struct {
-	Input  Message `json:"input,omitempty"`
-	Output Message `json:"output,omitempty"`
-}
-
-type CitationMetadata struct {
-	CitationSource []CitationSource `json:"citationSource,omitempty"`
-}
-
-type CitationSource struct {
-	StartIndex int    `json:"startIndex,omitempty"`
-	EndIndex   int    `json:"endIndex,omitempty"`
-	Uri        string `json:"uri,omitempty"`
-	License    string `json:"license,omitempty"`
-}
-
-type BlockedReason int
-
-const (
-	BLOCKED_REASON_UNSPECIFIED BlockedReason = iota
-	SAFETY
-	OTHER
-)
-
-func (r BlockedReason) String() string {
-	switch r {
-	case BLOCKED_REASON_UNSPECIFIED:
-		return "BLOCKED_REASON_UNSPECIFIED"
-	case SAFETY:
-		return "SAFETY"
-	case OTHER:
-		return "OTHER"
-	}
-	return ""
-}
-
-type ContentFilter struct {
-	Reason  BlockedReason `json:"reason"`
-	Message string        `json:"message"`
+type ResponseText struct {
+	Candidates     []TextCompletion `json:"candidates"`
+	Filters        []ContentFilter  `json:"filters"`
+	SafetyFeedback []SafetyFeedback `json:"safetyFeedback"`
 }
 
 func GenerateText(model string, params PromptConfig) (string, error) {
@@ -91,7 +25,7 @@ func GenerateText(model string, params PromptConfig) (string, error) {
 	if model == "" {
 		model = "text-bison-001"
 	}
-	err := LoadEnvFromFile(".env")
+	err := loadEnvFromFile(".env")
 	if err != nil {
 		return "", err
 	}
@@ -142,7 +76,7 @@ type ResponseMessage struct {
 }
 
 func GenerateMessage(messages MessagePrompt, params map[string]string) (string, error) {
-	err := LoadEnvFromFile(".env")
+	err := loadEnvFromFile(".env")
 	if err != nil {
 		return "", err
 	}
@@ -167,7 +101,7 @@ func GenerateMessage(messages MessagePrompt, params map[string]string) (string, 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		return "", err
 	}
 
 	var result ResponseMessage
@@ -176,4 +110,40 @@ func GenerateMessage(messages MessagePrompt, params map[string]string) (string, 
 		return "", err
 	}
 	return result.Candidates[0].Content, nil
+}
+
+type ResponseEmbed struct {
+	Embedding []Embedding `json:"embedding"`
+}
+
+func EmbedText(text string) (ResponseEmbed, error) {
+	err := loadEnvFromFile(".env")
+	if err != nil {
+		return ResponseEmbed{}, err
+	}
+	apiKey := os.Getenv("PALM_API_KEY")
+	endpoint := fmt.Sprintf("%s/models/%s:embedText?key=%s", API_BASE_URL, "text-bison-001", apiKey)
+	jsonMessagePrompt, err := json.Marshal(text)
+	if err != nil {
+		return ResponseEmbed{}, err
+	}
+	jsonPayload := []byte(jsonMessagePrompt)
+	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonPayload))
+	if err != nil {
+		return ResponseEmbed{}, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return ResponseEmbed{}, err
+	}
+
+	var result ResponseEmbed
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return ResponseEmbed{}, err
+	}
+	return result, nil
 }

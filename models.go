@@ -22,7 +22,7 @@ type Model struct {
 }
 
 func ListModels() ([]Model, error) {
-	err := LoadEnvFromFile(".env")
+	err := loadEnvFromFile(".env")
 	if err != nil {
 		return nil, fmt.Errorf("error loading .env file: %w", err)
 	}
@@ -53,7 +53,7 @@ func ListModels() ([]Model, error) {
 }
 
 func GetModel(name string) (Model, error) {
-	err := LoadEnvFromFile(".env")
+	err := loadEnvFromFile(".env")
 	apiKey := os.Getenv("PALM_API_KEY")
 	if err != nil {
 		return Model{}, fmt.Errorf("error loading .env file: %w", err)
