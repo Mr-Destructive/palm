@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
+	"strings"
 )
 
 type Model struct {
@@ -21,13 +21,13 @@ type Model struct {
 	TopK             int      `json:"topK"`
 }
 
+// ListModels returns a list of all models from the Palm API
 func ListModels() ([]Model, error) {
-	err := loadEnvFromFile(".env")
+	apiKey, err := loadAPIKey(".env")
 	if err != nil {
 		return nil, fmt.Errorf("error loading .env file: %w", err)
 	}
-	apiKey := os.Getenv("PALM_API_KEY")
-	endpoint := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta2/models/?key=%s", apiKey)
+	endpoint := fmt.Sprintf("%s/models/?key=%s", API_BASE_URL, apiKey)
 
 	req, err := http.NewRequest("GET", endpoint, nil)
 	if err != nil {
@@ -52,13 +52,16 @@ func ListModels() ([]Model, error) {
 	return result["models"], nil
 }
 
+// GetModel returns a single model by name from the Palm API
 func GetModel(name string) (Model, error) {
-	err := loadEnvFromFile(".env")
-	apiKey := os.Getenv("PALM_API_KEY")
+	apiKey, err := loadAPIKey(".env")
 	if err != nil {
 		return Model{}, fmt.Errorf("error loading .env file: %w", err)
 	}
-	endpoint := fmt.Sprintf("%s/models/%s?key=%s", API_BASE_URL, name, apiKey)
+	if !strings.HasPrefix(name, "models/") {
+		name = "models/" + name
+	}
+	endpoint := fmt.Sprintf("%s/%s?key=%s", API_BASE_URL, name, apiKey)
 	req, err := http.NewRequest("GET", endpoint, nil)
 	if err != nil {
 		return Model{}, fmt.Errorf("error creating request: %w", err)

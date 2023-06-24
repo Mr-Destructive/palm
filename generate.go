@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 )
 
 type Response struct {
@@ -25,11 +24,10 @@ func GenerateText(model string, params PromptConfig) (string, error) {
 	if model == "" {
 		model = "text-bison-001"
 	}
-	err := loadEnvFromFile(".env")
+	apiKey, err := loadAPIKey(".env")
 	if err != nil {
 		return "", err
 	}
-	apiKey := os.Getenv("PALM_API_KEY")
 	endpoint := fmt.Sprintf("%s/models/%s:generateText?key=%s", API_BASE_URL, model, apiKey)
 
 	if params.CandidateCount <= 0 {
@@ -76,11 +74,10 @@ type ResponseMessage struct {
 }
 
 func GenerateMessage(messages MessagePrompt, params map[string]string) (string, error) {
-	err := loadEnvFromFile(".env")
+	apiKey, err := loadAPIKey(".env")
 	if err != nil {
 		return "", err
 	}
-	apiKey := os.Getenv("PALM_API_KEY")
 	endpoint := fmt.Sprintf("%s/models/%s:generateMessage?key=%s", API_BASE_URL, params["model"], apiKey)
 	jsonMessagePrompt, err := json.Marshal(messages)
 	if err != nil {
@@ -117,11 +114,10 @@ type ResponseEmbed struct {
 }
 
 func EmbedText(text string) (ResponseEmbed, error) {
-	err := loadEnvFromFile(".env")
+	apiKey, err := loadAPIKey(".env")
 	if err != nil {
 		return ResponseEmbed{}, err
 	}
-	apiKey := os.Getenv("PALM_API_KEY")
 	endpoint := fmt.Sprintf("%s/models/%s:embedText?key=%s", API_BASE_URL, "text-bison-001", apiKey)
 	jsonMessagePrompt, err := json.Marshal(text)
 	if err != nil {
