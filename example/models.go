@@ -21,4 +21,8 @@ func main() {
 	}
 	fmt.Println(model)
 
+    GenerateTextExample()
+    GenerateMessageExample()
+    EmbedTextExample()
+
 }

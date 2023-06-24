@@ -5,8 +5,9 @@ import (
 	"github.com/mr-destructive/palm"
 )
 
-func main() {
-	modelName := "text-bison-001"
+const modelName = "text-bison-001"
+
+func GenerateMessageExample() {
 	/*
 		message := MessagePrompt{
 			Context: "what is the meaning of life",
@@ -42,15 +43,22 @@ func main() {
 		fmt.Println(err)
 	}
 	fmt.Println(m)
+
+}
+
+func GenerateTextExample() {
+	text, err := palm.GenerateText(modelName, palm.PromptConfig{Prompt: palm.TextPrompt{"what is the meaning of life"}})
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(text)
+}
+
+func ModelsExample() {
 	model, err := palm.GetModel(modelName)
 	if err != nil {
 		fmt.Println(err)
 	}
 	fmt.Println(model)
 	palm.ListModels()
-	text, err := palm.GenerateText(modelName, palm.PromptConfig{Prompt: palm.TextPrompt{"what is the meaning of life"}})
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(text)
 }

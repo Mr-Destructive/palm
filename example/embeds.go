@@ -6,7 +6,7 @@ import (
 	"github.com/mr-destructive/palm"
 )
 
-func main() {
+func EmbedTextExample() {
 	embed, err := palm.EmbedText("Hello world!")
 	if err != nil {
 		panic(err)
