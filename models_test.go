@@ -4,6 +4,13 @@ import (
 	"testing"
 )
 
+func TestApiKey(t *testing.T) {
+	_, err := loadAPIKey(".env")
+	if err != nil {
+		t.Errorf("loadApiKey failed: %v", err)
+	}
+}
+
 func TestListModels(t *testing.T) {
 	models, err := ListModels()
 	if err != nil {

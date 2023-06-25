@@ -38,7 +38,10 @@ func GenerateMessageExample() {
 			},
 		},
 	}
-	m, err := palm.GenerateMessage(message, map[string]string{"model": "chat-bison-001"})
+	msgConfig := palm.MessageConfig{
+		Prompt: message,
+	}
+	m, err := palm.GenerateMessage(msgConfig)
 	if err != nil {
 		fmt.Println(err)
 	}

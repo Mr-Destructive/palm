@@ -20,6 +20,12 @@ Set your API key in an .env file:
 PALM_API_KEY=YOUR_KEY_HERE
 ```
 
+or in the shell:
+
+```
+export PALM_API_KEY=YOUR_KEY_HERE
+```
+
 Import the packge with the name `github.com/mr-destructive/palm` as :
 
 ```go
@@ -30,6 +36,8 @@ import (
 )
 
 ```
+
+### Models
 
 Then you can list models with `ListModels()`:
 
@@ -55,6 +63,56 @@ if err != nil {
     log.Fatal(err)
 }
 fmt.Println(model)
+```
+
+### Chat
+
+```go
+chatConfig := palm.ChatConfig{
+    Messages: []palm.Message{
+        palm.Message{
+            Content: "what are you!",
+        },
+
+    },
+}
+
+chat, err := palm.Chat(chatConfig)
+if err != nil {
+    panic(err)
+}
+chat.Reply(palm.Message{Content: "what can you do!"})
+```
+
+OR a shorter version with `ChatPrompt(string)`
+
+```go
+chat, err := palm.ChatPrompt("what are you?")
+if err != nil {
+    panic(err)
+}
+fmt.Println(chat.Last)
+chat.Reply(palm.Message{Content: "what can you do!"})
+fmt.Println(chat.Last)
+```
+
+
+### Generation
+
+```go
+message := palm.MessagePrompt{
+    Messages: []palm.Message{
+        palm.Message{
+            Content: "what is the meaning of life",
+        },
+    },
+}
+m, err := palm.GenerateMessage(message, map[string]string{"model": "chat-bison-001"})
+if err != nil {
+    fmt.Println(err)
+}
+fmt.Println(m)
+
 ```
 
 ## Contributing

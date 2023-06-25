@@ -7,7 +7,6 @@ import (
 	"net/http"
 )
 
-
 type ResponseText struct {
 	Candidates     []TextCompletion `json:"candidates"`
 	Filters        []ContentFilter  `json:"filters"`
@@ -71,15 +70,17 @@ type ResponseMessage struct {
 	Filters    []ContentFilter `json:"filters"`
 }
 
-func GenerateMessage(messages MessagePrompt, params map[string]string) (string, error) {
+func GenerateMessage(messageConfig MessageConfig) (*ResponseMessage, error) {
 	apiKey, err := loadAPIKey(".env")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	endpoint := fmt.Sprintf("%s/models/%s:generateMessage?key=%s", API_BASE_URL, params["model"], apiKey)
+	model := "chat-bison-001"
+	messages := messageConfig.Prompt
+	endpoint := fmt.Sprintf("%s/models/%s:generateMessage?key=%s", API_BASE_URL, model, apiKey)
 	jsonMessagePrompt, err := json.Marshal(messages)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	payload := `{
 	    "prompt": ` + string(jsonMessagePrompt) + `,
@@ -89,25 +90,25 @@ func GenerateMessage(messages MessagePrompt, params map[string]string) (string, 
 	jsonPayload := []byte(payload)
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonPayload))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	req.Header.Add("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	var result ResponseMessage
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if len(result.Candidates) > 0 {
-		return result.Candidates[0].Content, nil
+		return &result, nil
 	}
-	return "", fmt.Errorf("error fetching response candidates")
+	return nil, fmt.Errorf("error fetching response candidates")
 }
 
 type ResponseEmbed struct {
@@ -146,4 +147,100 @@ func EmbedText(text string) (ResponseEmbed, error) {
 		return ResponseEmbed{}, err
 	}
 	return result, nil
+}
+
+type ChatResponse struct {
+	Candidates     []Message       `json:"candidates"`
+	Filters        []ContentFilter `json:"filters"`
+	Messages       []MessagePrompt `json:"messages"`
+	Model          string          `json:"model"`
+	Context        string          `json:"context"`
+	Examples       []Example       `json:"examples"`
+	Temperature    float64         `json:"temperature"`
+	CandidateCount int             `json:"candidate_count"`
+	TopK           int             `json:"top_k"`
+	TopP           float64         `json:"top_p"`
+	Last           string          `json:"last"`
+}
+
+func (c *ChatResponse) GetLast() string {
+	if len(c.Candidates) > 0 {
+		return c.Candidates[0].Content
+	}
+	return ""
+}
+
+func Chat(config ChatConfig) (ChatResponse, error) {
+	var msg string
+	if len(config.Messages) == 0 && config.Prompt.Text != "" {
+		msg = config.Prompt.Text
+	} else {
+		msg = config.Messages[0].Content
+	}
+	msgConfig := MessageConfig{
+		Prompt: MessagePrompt{
+			Messages: []Message{Message{Content: msg}},
+		},
+		Temperature:    config.Temperature,
+		CandidateCount: config.CandidateCount,
+		TopK:           config.TopK,
+		TopP:           config.TopP,
+	}
+	msgResp, err := GenerateMessage(msgConfig)
+	if err != nil {
+		return ChatResponse{}, err
+	}
+	resp := *&msgResp
+	// convert the msg to MessagePrompt
+	msgPrompt := []MessagePrompt{}
+	for i, m := range resp.Candidates {
+		resp.Messages[i].Content = m.Content
+		message := Message{Content: m.Content}
+		msgPrompt = append(msgPrompt, MessagePrompt{Messages: []Message{message}})
+	}
+
+	chatResp := ChatResponse{
+		Candidates:     resp.Candidates,
+		Filters:        resp.Filters,
+		Messages:       msgPrompt,
+		Model:          config.Model,
+		Context:        config.Context,
+		Examples:       config.Examples,
+		Temperature:    config.Temperature,
+		CandidateCount: config.CandidateCount,
+		TopK:           config.TopK,
+		TopP:           config.TopP,
+	}
+	chatResp.Last = chatResp.GetLast()
+	return chatResp, nil
+
+}
+
+func (c *ChatResponse) Reply(message Message) {
+	msgConfig := MessageConfig{
+		Prompt: MessagePrompt{
+			Messages: []Message{message},
+		},
+		Temperature:    c.Temperature,
+		CandidateCount: c.CandidateCount,
+		TopK:           c.TopK,
+		TopP:           c.TopP,
+	}
+	msgResp, err := GenerateMessage(msgConfig)
+	if err != nil {
+		return
+	}
+	resp := *msgResp
+	c.Messages = append(c.Messages, MessagePrompt{Messages: []Message{message}})
+	c.Candidates = append(c.Candidates, resp.Candidates...)
+	c.Last = resp.Candidates[0].Content
+}
+
+func ChatPrompt(prompt string) (ChatResponse, error) {
+	chatConfig := ChatConfig{Prompt: TextPrompt{Text: prompt}}
+	resp, err := Chat(chatConfig)
+	if err != nil {
+		return ChatResponse{}, err
+	}
+	return resp, nil
 }

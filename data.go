@@ -8,6 +8,18 @@ type SafetySetting struct {
 	StopSequence string `json:"stopSequence"`
 }
 
+type ChatConfig struct {
+	Model          string     `json:"model;omitempty"`
+	Context        string     `json:"context;omitempty"`
+	Examples       []Example  `json:"examples,omitempty"`
+	Messages       []Message  `json:"messages;omitempty"`
+	Temperature    float64    `json:"temperature;omitempty"`
+	CandidateCount int        `json:"candidateCount;omitempty"`
+	TopP           float64    `json:"topP;omitempty"`
+	TopK           int        `json:"topK;omitempty"`
+	Prompt         TextPrompt `json:"prompt"`
+}
+
 type PromptConfig struct {
 	Prompt          TextPrompt      `json:"prompt"`
 	SafetySettings  []SafetySetting `json:"safetySettings"`
@@ -31,6 +43,14 @@ type MessagePrompt struct {
 	Messages []Message `json:"messages"`
 }
 
+type MessageConfig struct {
+	Prompt         MessagePrompt `json:"prompt"`
+	Temperature    float64       `json:"temperature"`
+	CandidateCount int           `json:"candidateCount"`
+	TopP           float64       `json:"topP"`
+	TopK           int           `json:"topK"`
+}
+
 type Example struct {
 	Input  Message `json:"input,omitempty"`
 	Output Message `json:"output,omitempty"`
@@ -48,8 +68,8 @@ type CitationSource struct {
 }
 
 type ContentFilter struct {
-	Reason  BlockedReason `json:"reason"`
-	Message string        `json:"message"`
+	Reason  string `json:"reason"`
+	Message string `json:"message"`
 }
 
 type TextCompletion struct {
@@ -66,85 +86,6 @@ type SafetyFeedback struct {
 type SafetyRating struct {
 	Category  string  `json:"category"`
 	Threshold float64 `json:"threshold"`
-}
-
-type BlockedReason int
-
-const (
-	BLOCKED_REASON_UNSPECIFIED BlockedReason = iota
-	SAFETY
-	OTHER
-)
-
-func (r BlockedReason) String() string {
-	switch r {
-	case BLOCKED_REASON_UNSPECIFIED:
-		return "BLOCKED_REASON_UNSPECIFIED"
-	case SAFETY:
-		return "SAFETY"
-	case OTHER:
-		return "OTHER"
-	}
-	return ""
-}
-
-type HarmCategory int
-
-const (
-	HARM_CATEGORY_UNSPECIFIED HarmCategory = iota
-	HARM_CATEGORY_DEROGATORY
-	HARM_CATEGORY_TOXICITY
-	HARM_CATEGORY_VIOLENCE
-	HARM_CATEGORY_SEXUAL
-	HARM_CATEGORY_MEDICAL
-	HARM_CATEGORY_DANGEROUS
-)
-
-func (c HarmCategory) String() string {
-	switch c {
-	case HARM_CATEGORY_UNSPECIFIED:
-		return "HARM_CATEGORY_UNSPECIFIED"
-	case HARM_CATEGORY_DEROGATORY:
-		return "HARM_CATEGORY_DEROGATORY"
-	case HARM_CATEGORY_TOXICITY:
-		return "HARM_CATEGORY_TOXICITY"
-	case HARM_CATEGORY_VIOLENCE:
-		return "HARM_CATEGORY_VIOLENCE"
-	case HARM_CATEGORY_SEXUAL:
-		return "HARM_CATEGORY_SEXUAL"
-	case HARM_CATEGORY_MEDICAL:
-		return "HARM_CATEGORY_MEDICAL"
-	case HARM_CATEGORY_DANGEROUS:
-		return "HARM_CATEGORY_DANGEROUS"
-	}
-	return ""
-}
-
-type HarmBlockThreshold int
-
-const (
-	HARM_BLOCK_THRESHOLD_UNSPECIFIED HarmBlockThreshold = iota
-	BLOCK_LOW_AND_ABOVE
-	BLOCK_MEDIUM_AND_ABOVE
-	BLOCK_ONLY_HIGH
-	BLOCK_NONE
-)
-
-func (t HarmBlockThreshold) String() string {
-	switch t {
-	case HARM_BLOCK_THRESHOLD_UNSPECIFIED:
-		return "HARM_BLOCK_THRESHOLD_UNSPECIFIED"
-	case BLOCK_LOW_AND_ABOVE:
-		return "BLOCK_LOW_AND_ABOVE"
-	case BLOCK_MEDIUM_AND_ABOVE:
-		return "BLOCK_MEDIUM_AND_ABOVE"
-	case BLOCK_ONLY_HIGH:
-		return "BLOCK_ONLY_HIGH"
-	case BLOCK_NONE:
-		return "BLOCK_NONE"
-	}
-	return ""
-
 }
 
 type Embedding struct {
