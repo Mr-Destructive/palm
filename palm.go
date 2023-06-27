@@ -2,6 +2,8 @@ package palm
 
 import (
 	"bufio"
+	"bytes"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -33,4 +35,15 @@ func loadAPIKey(filepath string) (string, error) {
 	}
 	return apiKey, nil
 
+}
+
+func makeRequest(endpoint, method string, payload []byte) (*http.Response, error) {
+	req, err := http.NewRequest(method, endpoint, bytes.NewBuffer(payload))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+
+	client := &http.Client{}
+	return client.Do(req)
 }

@@ -80,7 +80,7 @@ func TestChatReply(t *testing.T) {
 					Content: "hello world!",
 				},
 				Output: Message{
-					Content: "hello world!",
+					Content: "what is that greeting used for?",
 				},
 			},
 		},
@@ -93,7 +93,7 @@ func TestChatReply(t *testing.T) {
 	if err != nil {
 		t.Errorf("Chat failed: %v", err)
 	}
-	chat.Reply(Message{Content: "what can you do for me!"})
+	chat.Reply("what can you do for me!")
 	if len(chat.Messages) == 0 {
 		t.Error("Chat returned no messages")
 	}

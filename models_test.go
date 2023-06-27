@@ -11,6 +11,13 @@ func TestApiKey(t *testing.T) {
 	}
 }
 
+func TestMakeRequest(t *testing.T) {
+	_, err := makeRequest(API_BASE_URL, "GET", nil)
+	if err != nil {
+		t.Errorf("makeRequest failed: %v", err)
+	}
+}
+
 func TestListModels(t *testing.T) {
 	models, err := ListModels()
 	if err != nil {

@@ -3,7 +3,6 @@ package palm
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 )
 
@@ -29,14 +28,7 @@ func ListModels() ([]Model, error) {
 	}
 	endpoint := fmt.Sprintf("%s/models/?key=%s", API_BASE_URL, apiKey)
 
-	req, err := http.NewRequest("GET", endpoint, nil)
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-	req.Header.Add("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := makeRequest(endpoint, "GET", nil)
 	if err != nil {
 		return nil, fmt.Errorf("error making request: %w", err)
 	}
@@ -62,14 +54,7 @@ func GetModel(name string) (Model, error) {
 		name = "models/" + name
 	}
 	endpoint := fmt.Sprintf("%s/%s?key=%s", API_BASE_URL, name, apiKey)
-	req, err := http.NewRequest("GET", endpoint, nil)
-	if err != nil {
-		return Model{}, fmt.Errorf("error creating request: %w", err)
-	}
-	req.Header.Add("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := makeRequest(endpoint, "GET", nil)
 	var result Model
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {

@@ -29,7 +29,7 @@ func ChatExample() {
 	if err != nil {
 		panic(err)
 	}
-	chat.Reply(palm.Message{Content: "what can you do for me!"})
+	chat.Reply("what can you do for me!")
 }
 
 func ChatPromptExample() {
@@ -37,5 +37,5 @@ func ChatPromptExample() {
 	if err != nil {
 		panic(err)
 	}
-	chat.Reply(palm.Message{Content: "what lies in the amazon rainforest?"})
+	chat.Reply("what lies in the amazon rainforest?")
 }
