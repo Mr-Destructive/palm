@@ -51,11 +51,9 @@ fmt.Println(models)
 
 And get a single model by name with `GetModel(name)`, there are three model names as :
 
-```
-models/chat-bison-001
-models/text-bison-001
-models/embedding-gecko-001
-```
+- models/chat-bison-001
+- models/text-bison-001
+- models/embedding-gecko-001
 
 ```go
 model, err := palm.GetModel("model/chat-bison-001")
@@ -67,24 +65,7 @@ fmt.Println(model)
 
 ### Chat
 
-```go
-chatConfig := palm.ChatConfig{
-    Messages: []palm.Message{
-        palm.Message{
-            Content: "what are you!",
-        },
-
-    },
-}
-
-chat, err := palm.Chat(chatConfig)
-if err != nil {
-    panic(err)
-}
-chat.Reply(palm.Message{Content: "what can you do!"})
-```
-
-OR a shorter version with `ChatPrompt(string)`
+Get a quick conversation prompt with `ChatPrompt(string)` and further prompts with `Reply(string)` method
 
 ```go
 chat, err := palm.ChatPrompt("what are you?")
@@ -92,12 +73,47 @@ if err != nil {
     panic(err)
 }
 fmt.Println(chat.Last)
-chat.Reply(palm.Message{Content: "what can you do!"})
+chat.Reply("what can you do!")
 fmt.Println(chat.Last)
 ```
 
+OR fine-tune the `ChatConfig` to the `Chat` method.
+
+```go
+chatConfig := palm.ChatConfig{
+    Prompt: palm.TextPrompt{
+        Text: "what are you?",
+    }
+    Messages: []palm.Message{
+        palm.Message{
+            Author: "bot",
+            Content: "hello world!",
+        },
+    },
+    Model: "string"
+    Context: "string",
+    Examples: []palm.Example{
+        palm.Example{
+            Input: "what are you?",
+            Output: "I am a bot",
+        }, 
+    },
+    Temperature: 0.5,
+    CandidateCount: 10,
+    TopP: 0.5,
+    TopK: 10,
+}
+
+chat, err := palm.Chat(chatConfig)
+if err != nil {
+    panic(err)
+}
+chat.Reply("what can you do!")
+```
 
 ### Generation
+
+Use the underlying method in the `Chat` methods to get a `ResponseMessage`.
 
 ```go
 message := palm.MessagePrompt{
@@ -107,7 +123,10 @@ message := palm.MessagePrompt{
         },
     },
 }
-m, err := palm.GenerateMessage(message, map[string]string{"model": "chat-bison-001"})
+msgConfig := MessageConfig{
+    Prompt: message,
+}
+m, err := palm.GenerateMessage(msgConfig)
 if err != nil {
     fmt.Println(err)
 }
@@ -118,5 +137,4 @@ fmt.Println(m)
 ## Contributing
 
 Contributions are welcome! Open an issue or submit a PR.
-
 

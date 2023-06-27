@@ -22,6 +22,7 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
 
-      - name: Run tests
+      - name: Check for type of change
+        if: ${{ !contains(steps.commit_message.outputs.message, 'docs:') }}
         run: |
           go test -v ./...
