@@ -6,6 +6,10 @@ import (
 )
 
 type ResponseText struct {
+	Candidates []TextCompletion `json:"candidates"`
+}
+
+type ResponseChat struct {
 	Candidates     []TextCompletion `json:"candidates"`
 	Filters        []ContentFilter  `json:"filters"`
 	SafetyFeedback []SafetyFeedback `json:"safetyFeedback"`
@@ -44,7 +48,7 @@ func GenerateText(model string, params PromptConfig) (string, error) {
 		return "", err
 	}
 
-	var result ResponseText
+	var result ResponseChat
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
 		return "", err
@@ -66,9 +70,8 @@ func GenerateMessage(messageConfig MessageConfig) (*ResponseMessage, error) {
 	if err != nil {
 		return nil, err
 	}
-	model := "chat-bison-001"
 	messages := messageConfig.Prompt
-	endpoint := fmt.Sprintf("%s/models/%s:generateMessage?key=%s", API_BASE_URL, model, apiKey)
+	endpoint := fmt.Sprintf("%s/%s:generateMessage?key=%s", API_BASE_URL, CHAT_MODEL, apiKey)
 	jsonMessagePrompt, err := json.Marshal(messages)
 	if err != nil {
 		return nil, err
@@ -104,7 +107,7 @@ func EmbedText(text string) (ResponseEmbed, error) {
 	if err != nil {
 		return ResponseEmbed{}, err
 	}
-	endpoint := fmt.Sprintf("%s/%s:embedText?key=%s", API_BASE_URL, "models/embedding-gecko-001", apiKey)
+	endpoint := fmt.Sprintf("%s/%s:embedText?key=%s", API_BASE_URL, EMBED_MODEL, apiKey)
 	jsonMessagePrompt, err := json.Marshal(text)
 	if err != nil {
 		return ResponseEmbed{}, err
@@ -220,4 +223,37 @@ func ChatPrompt(prompt string) (ChatResponse, error) {
 		return ChatResponse{}, err
 	}
 	return resp, nil
+}
+
+func (c *Client) ChatPrompt(prompt string) (ResponseText, error) {
+	response := ResponseText{}
+	if c.config.authToken == "" {
+		return response, fmt.Errorf("auth token not set")
+	}
+	endpoint := fmt.Sprintf("%s/%s:generateText?key=%s", API_BASE_URL, TEXT_MODEL, c.config.authToken)
+	jsonMessagePrompt, err := json.Marshal(
+		PromptConfig{
+			Prompt: TextPrompt{
+				Text: prompt,
+			},
+			MaxOutputTokens: 100,
+			CandidateCount:  1,
+			TopK:            1,
+			TopP:            1,
+		})
+	if err != nil {
+		return response, err
+	}
+	payload := string(jsonMessagePrompt)
+	jsonPayload := []byte(payload)
+
+	resp, err := makeRequest(endpoint, "POST", jsonPayload)
+	if err != nil {
+		return response, err
+	}
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		return response, err
+	}
+	return response, nil
 }
