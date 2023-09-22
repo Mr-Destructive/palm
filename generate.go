@@ -20,11 +20,11 @@ func GenerateText(model, apiKey string, params PromptConfig) (string, error) {
 		model = "text-bison-001"
 	}
 	if apiKey == "" {
-		apiKey, err := loadAPIKey(".env")
+		key, err := loadAPIKey(".env")
 		if err != nil {
 			return "", err
 		}
-		apiKey = apiKey
+		apiKey = key
 	}
 	endpoint := fmt.Sprintf("%s/models/%s:generateText?key=%s", API_BASE_URL, model, apiKey)
 
@@ -69,11 +69,11 @@ type ResponseMessage struct {
 
 func GenerateMessage(apiKey string, messageConfig MessageConfig) (*ResponseMessage, error) {
 	if apiKey == "" {
-		apiKey, err := loadAPIKey(".env")
+		key, err := loadAPIKey(".env")
 		if err != nil {
 			return nil, err
 		}
-		apiKey = apiKey
+		apiKey = key
 	}
 	messages := messageConfig.Prompt
 	endpoint := fmt.Sprintf("%s/%s:generateMessage?key=%s", API_BASE_URL, CHAT_MODEL, apiKey)
@@ -203,7 +203,6 @@ func Chat(config ChatConfig) (ChatResponse, error) {
 	}
 	chatResp.Last = chatResp.GetLast()
 	return chatResp, nil
-
 }
 
 func (c *ChatResponse) Reply(msg string) {
@@ -223,10 +222,8 @@ func (c *ChatResponse) Reply(msg string) {
 		return
 	}
 	resp := *msgResp
-	c.Messages = append(c.Messages, c.Messages...)
-	c.Messages = append(c.Messages, resp.Candidates[0])
-	c.Candidates = append(c.Candidates, resp.Candidates...)
-	c.Last = resp.Candidates[0].Content
+	botMsg := Message{Content: resp.Candidates[0].Content, Author: "bot"}
+	c.Messages = append(c.Messages, botMsg)
 }
 
 func ChatPrompt(prompt string) (ChatResponse, error) {

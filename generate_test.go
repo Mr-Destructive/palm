@@ -104,7 +104,7 @@ func TestChatReply(t *testing.T) {
 }
 
 func TestChatPrompt(t *testing.T) {
-	chat, err := ChatPrompt("write a poem on a golang developer")
+	chat, err := ChatPrompt("write a poem")
 	if err != nil {
 		t.Errorf("ChatPrompt failed: %v", err)
 	}
