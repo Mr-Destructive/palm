@@ -15,14 +15,16 @@ type ResponseChat struct {
 	SafetyFeedback []SafetyFeedback `json:"safetyFeedback"`
 }
 
-func GenerateText(model string, params PromptConfig) (string, error) {
-
+func GenerateText(model, apiKey string, params PromptConfig) (string, error) {
 	if model == "" {
 		model = "text-bison-001"
 	}
-	apiKey, err := loadAPIKey(".env")
-	if err != nil {
-		return "", err
+	if apiKey == "" {
+		apiKey, err := loadAPIKey(".env")
+		if err != nil {
+			return "", err
+		}
+		apiKey = apiKey
 	}
 	endpoint := fmt.Sprintf("%s/models/%s:generateText?key=%s", API_BASE_URL, model, apiKey)
 
@@ -65,10 +67,13 @@ type ResponseMessage struct {
 	Filters    []ContentFilter `json:"filters"`
 }
 
-func GenerateMessage(messageConfig MessageConfig) (*ResponseMessage, error) {
-	apiKey, err := loadAPIKey(".env")
-	if err != nil {
-		return nil, err
+func GenerateMessage(apiKey string, messageConfig MessageConfig) (*ResponseMessage, error) {
+	if apiKey == "" {
+		apiKey, err := loadAPIKey(".env")
+		if err != nil {
+			return nil, err
+		}
+		apiKey = apiKey
 	}
 	messages := messageConfig.Prompt
 	endpoint := fmt.Sprintf("%s/%s:generateMessage?key=%s", API_BASE_URL, CHAT_MODEL, apiKey)
@@ -170,7 +175,11 @@ func Chat(config ChatConfig) (ChatResponse, error) {
 		TopK:           config.TopK,
 		TopP:           config.TopP,
 	}
-	msgResp, err := GenerateMessage(msgConfig)
+	apiKey, err := loadAPIKey(".env")
+	if err != nil {
+		return ChatResponse{}, err
+	}
+	msgResp, err := GenerateMessage(apiKey, msgConfig)
 	if err != nil {
 		return ChatResponse{}, err
 	}
@@ -205,7 +214,11 @@ func (c *ChatResponse) Reply(msg string) {
 			Messages: c.Messages,
 		},
 	}
-	msgResp, err := GenerateMessage(msgConfig)
+	apiKey, err := loadAPIKey(".env")
+	if err != nil {
+		return
+	}
+	msgResp, err := GenerateMessage(apiKey, msgConfig)
 	if err != nil {
 		return
 	}
@@ -256,4 +269,48 @@ func (c *Client) ChatPrompt(prompt string) (ResponseText, error) {
 		return response, err
 	}
 	return response, nil
+}
+
+func (c *Client) Chat(config ChatConfig) (ChatResponse, error) {
+	var msg string
+	message := Message{Content: msg, Author: "user"}
+	if len(config.Messages) == 0 && config.Prompt.Text != "" {
+		msg = config.Prompt.Text
+		message.Content = msg
+		config.Messages = append(config.Messages, message)
+	} else {
+		msg = config.Messages[len(config.Messages)-1].Content
+	}
+	msgConfig := MessageConfig{
+		Prompt: MessagePrompt{
+			Messages: config.Messages,
+		},
+		Temperature:    config.Temperature,
+		CandidateCount: config.CandidateCount,
+		TopK:           config.TopK,
+		TopP:           config.TopP,
+	}
+	msgResp, err := GenerateMessage(c.config.authToken, msgConfig)
+	if err != nil {
+		return ChatResponse{}, err
+	}
+	resp := *&msgResp
+	m := resp.Candidates[0]
+	message = Message{Content: m.Content, Author: "bot"}
+	resp.Messages = append(resp.Messages, message)
+
+	chatResp := ChatResponse{
+		Candidates:     resp.Candidates,
+		Filters:        resp.Filters,
+		Messages:       resp.Messages,
+		Model:          config.Model,
+		Context:        config.Context,
+		Examples:       config.Examples,
+		Temperature:    config.Temperature,
+		CandidateCount: config.CandidateCount,
+		TopK:           config.TopK,
+		TopP:           config.TopP,
+	}
+	chatResp.Last = chatResp.GetLast()
+	return chatResp, nil
 }

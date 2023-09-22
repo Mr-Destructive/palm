@@ -41,7 +41,7 @@ func GenerateMessageExample() {
 	msgConfig := palm.MessageConfig{
 		Prompt: message,
 	}
-	m, err := palm.GenerateMessage(msgConfig)
+	m, err := palm.GenerateMessage("", msgConfig)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -50,7 +50,7 @@ func GenerateMessageExample() {
 }
 
 func GenerateTextExample() {
-	text, err := palm.GenerateText(modelName, palm.PromptConfig{Prompt: palm.TextPrompt{"what is the meaning of life"}})
+	text, err := palm.GenerateText(modelName, "", palm.PromptConfig{Prompt: palm.TextPrompt{"what is the meaning of life"}})
 	if err != nil {
 		fmt.Println(err)
 	}

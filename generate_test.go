@@ -5,7 +5,7 @@ import (
 )
 
 func TestGenerateText(t *testing.T) {
-	text, err := GenerateText("text-bison-001", PromptConfig{Prompt: TextPrompt{"hello world"}})
+	text, err := GenerateText("text-bison-001", "", PromptConfig{Prompt: TextPrompt{"hello"}})
 	if err != nil {
 		t.Errorf("GenerateText failed: %v", err)
 	}
@@ -18,14 +18,14 @@ func TestGenerateMessage(t *testing.T) {
 	message := MessagePrompt{
 		Messages: []Message{
 			Message{
-				Content: "hello world",
+				Content: "hello",
 			},
 		},
 	}
 	msgConfig := MessageConfig{
 		Prompt: message,
 	}
-	msg, err := GenerateMessage(msgConfig)
+	msg, err := GenerateMessage("", msgConfig)
 	if err != nil {
 		t.Errorf("GenerateMessage failed: %v", err)
 	}
@@ -50,7 +50,7 @@ func TestChat(t *testing.T) {
 		Examples: []Example{
 			Example{
 				Input: Message{
-					Content: "hello world!",
+					Content: "hello !",
 				},
 				Output: Message{
 					Content: "hello world!",
