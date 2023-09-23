@@ -311,3 +311,7 @@ func (c *Client) Chat(config ChatConfig) (ChatResponse, error) {
 	chatResp.Last = chatResp.GetLast()
 	return chatResp, nil
 }
+
+func (c *Client) EmbedText(text string) (ResponseEmbed, error) {
+    return EmbedText(text)
+}

@@ -37,6 +37,15 @@ import (
 
 ```
 
+### Creating a Client
+
+Create a client with `NewClient(string)` by passing your API key. Access the methods like `ChatPrompt(string)`, `Chat(ChatConfig)`, or `EmbedText(string)` with the client.
+
+```go
+client := palm.NewClient("PALM_API_KEY")
+client.ChatPrompt("what are you?")
+```
+
 ### Models
 
 Then you can list models with `ListModels()`:
